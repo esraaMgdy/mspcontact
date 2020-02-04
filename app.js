@@ -1,38 +1,40 @@
-const express = require('express');
-const bodyParser = require('body-parser');
 const http = require('http');
 var fs = require('fs');
 const nStatic = require('node-static');
 const path = require('path');
 const nodemailer = require('nodemailer');
 
-const app = express();
 
-
-//Static folder
-
-
-// Body Parser Middleware
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 //api
 var server = http.createServer(function (req, res) {
-
+  console.log('request was made : ' + req.url); 
   if (req.url === "/") {
       res.writeHead(200, { "Content-Type": "text/html" });
-      fs.createReadStream("./index.html", "UTF-8").pipe(res);
+       var myReadStream = fs.createReadStream(__dirname + "./index.html", "UTF-8");
+       myReadStream.pipe(res);
   } 
+
   else if (req.url === "/send") {
-    res.writeHead(200, { "Content-Type": "text/html" });
-    fs.createReadStream("./index.html", "UTF-8").pipe(res);
+    res.writeHead(200, { "Content-Type": "application/json" });
+     var output = `
+      <p>You have a new contact request</p>
+      <h3>Contact Details</h3>
+      <ul>  
+        <li>Name: ${req.body.name}</li>
+        <li>Company: ${req.body.company}</li>
+        <li>Email: ${req.body.email}</li>
+        <li>Phone: ${req.body.phone}</li>
+      </ul>
+      <h3>Message</h3>
+      <p>${req.body.message}</p>
+    `;
+    
+    res.end(JSON.stringify(output));
 
-    req.on("end", function(){
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end( );
-  });
-  }
+    }
 
+  
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
     host: 'mail.YOURDOMAIN.com',
@@ -68,5 +70,7 @@ var server = http.createServer(function (req, res) {
   });
   
 
-}).listen(3000);
+});
+
+server.listen(3000);
 console.log('listening on port 3000 ...');
